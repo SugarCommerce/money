@@ -1,0 +1,69 @@
+{
+    "name": "sugarcommerce/money",
+    "description": "Money as whole numbers of pence, cents and yen for WordPress: format, parse and check amounts in 136 currencies, each with the right number of decimal places.",
+    "homepage": "https://github.com/SugarCommerce/money",
+    "type": "library",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "David Sherlock",
+            "homepage": "https://arraypress.com/"
+        }
+    ],
+    "keywords": [
+        "wordpress",
+        "money",
+        "currency",
+        "iso-4217",
+        "formatting",
+        "ecommerce",
+        "minor-units",
+        "stripe"
+    ],
+    "require": {
+        "php": ">=8.3",
+        "ext-mbstring": "*"
+    },
+    "require-dev": {
+        "phpcompatibility/phpcompatibility-wp": "^2.1",
+        "phpunit/phpunit": "^12.0",
+        "squizlabs/php_codesniffer": "^3.13.5",
+        "wp-coding-standards/wpcs": "^3.4"
+    },
+    "suggest": {
+        "ext-intl": "Prices written the way a locale writes them, through the `locale` option."
+    },
+    "autoload": {
+        "psr-4": {
+            "SugarCommerce\\Money\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SugarCommerce\\Money\\Tests\\": "tests/"
+        },
+        "exclude-from-classmap": [
+            "/tests/bootstrap.php"
+        ]
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true,
+        "preferred-install": "dist",
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "scripts": {
+        "test": "phpunit",
+        "lint": "phpcs",
+        "format": "phpcbf --standard=phpcs-format.xml.dist",
+        "format:check": "phpcs --standard=phpcs-format.xml.dist"
+    },
+    "support": {
+        "issues": "https://github.com/SugarCommerce/money/issues",
+        "source": "https://github.com/SugarCommerce/money"
+    }
+}
