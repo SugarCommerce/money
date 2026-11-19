@@ -224,13 +224,72 @@ final class AdvertisedTest extends TestCase {
 	}
 
 	/**
-	 * Currencies are found by the country that issues them.
+	 * A country gives the currency a shopper there pays in.
 	 */
 	public function test_currencies_resolve_by_country(): void {
 		$this->assertSame( array( 'JPY' ), Currencies::for_country( 'JP' ) );
 		$this->assertSame( array( 'GBP' ), Currencies::for_country( ' gb ' ) );
 		$this->assertSame( array( 'EUR' ), Currencies::for_country( 'EU' ) );
 		$this->assertSame( array(), Currencies::for_country( 'ZZ' ) );
+		$this->assertSame( array(), Currencies::for_country( '' ) );
+	}
+
+	/**
+	 * The euro area is found by member state, not only under `EU`.
+	 *
+	 * The issuer column files the euro under the union, so before the
+	 * spending map Germany had no currency at all.
+	 */
+	public function test_a_euro_area_country_pays_in_euro(): void {
+		$this->assertSame( array( 'EUR' ), Currencies::for_country( 'DE' ) );
+		$this->assertSame( 'EUR', Currencies::paid_in( 'ie' ) );
+		$this->assertSame( 'EUR', Currencies::paid_in( 'HR' ) );
+		$this->assertSame( 'EUR', Currencies::paid_in( 'ME' ) );
+	}
+
+	/**
+	 * Bulgaria has paid in euro since 1 January 2026; the lev stays in the
+	 * dataset so an old order still formats.
+	 */
+	public function test_bulgaria_pays_in_euro_and_the_lev_is_kept(): void {
+		$this->assertSame( array( 'EUR' ), Currencies::for_country( 'BG' ) );
+		$this->assertTrue( Currencies::supports( 'BGN' ) );
+		$this->assertSame( 'BG', Currencies::country( 'BGN' ) );
+	}
+
+	/**
+	 * EU members outside the euro keep their own money.
+	 */
+	public function test_eu_members_outside_the_euro_keep_their_currency(): void {
+		$this->assertSame( 'SEK', Currencies::paid_in( 'SE' ) );
+		$this->assertSame( 'PLN', Currencies::paid_in( 'PL' ) );
+		$this->assertSame( 'CZK', Currencies::paid_in( 'cz' ) );
+		$this->assertSame( 'DKK', Currencies::paid_in( 'DK' ) );
+		$this->assertSame( 'HUF', Currencies::paid_in( 'HU' ) );
+		$this->assertSame( 'RON', Currencies::paid_in( 'RO' ) );
+	}
+
+	/**
+	 * A shared currency is found from every country that spends it.
+	 */
+	public function test_shared_currencies_resolve_from_each_country(): void {
+		$this->assertSame( 'XOF', Currencies::paid_in( 'CI' ) );
+		$this->assertSame( 'XAF', Currencies::paid_in( 'GA' ) );
+		$this->assertSame( 'XCD', Currencies::paid_in( 'LC' ) );
+		$this->assertSame( 'USD', Currencies::paid_in( 'EC' ) );
+		$this->assertSame( 'AUD', Currencies::paid_in( 'KI' ) );
+		$this->assertSame( 'CHF', Currencies::paid_in( 'LI' ) );
+	}
+
+	/**
+	 * Null means "use your default": the country's money is not one the
+	 * dataset carries, or it moved off a retired one.
+	 */
+	public function test_a_country_without_a_listed_currency_is_null(): void {
+		$this->assertNull( Currencies::paid_in( 'AQ' ) );
+		$this->assertNull( Currencies::paid_in( 'CW' ) );
+		$this->assertNull( Currencies::paid_in( 'SL' ) );
+		$this->assertNull( Currencies::paid_in( 'nonsense' ) );
 	}
 
 	/**

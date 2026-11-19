@@ -174,6 +174,69 @@ final readonly class Currencies {
 	);
 
 	/**
+	 * ISO 3166-1 alpha-2 country => the currency a shopper there pays in.
+	 *
+	 * The question {@see for_country()} answers, which the issuer column in
+	 * the dataset cannot: the euro is filed under `EU`, so a visitor in
+	 * Germany or Ireland is found here, not there. The euro area is listed in
+	 * full -- the twenty-one member states (Bulgaria since 1 January 2026,
+	 * Croatia since 2023) and the places that use the euro without being in
+	 * the union, Andorra, Monaco, San Marino, the Vatican, Montenegro and
+	 * Kosovo among them. `EU` itself maps to the euro too, the code
+	 * {@see country()} gives it.
+	 *
+	 * Only currencies in the dataset are named. A country is left out when
+	 * the money it spends is not one of them: Curaçao and Sint Maarten moved
+	 * from the Netherlands Antillean guilder to the Caribbean guilder (XCG) in
+	 * 2025, Sierra Leone from the old leone (SLL) to SLE, and the rest -- Cuba,
+	 * Iran, Venezuela and so on -- spend a currency Stripe does not take. BGN,
+	 * ANG and SLL stay in the dataset so old orders still format.
+	 *
+	 * @var array<string, string>
+	 */
+	private const COUNTRY_CURRENCY = array(
+		'AD' => 'EUR', 'AE' => 'AED', 'AF' => 'AFN', 'AG' => 'XCD', 'AI' => 'XCD', 'AL' => 'ALL',
+		'AM' => 'AMD', 'AO' => 'AOA', 'AR' => 'ARS', 'AS' => 'USD', 'AT' => 'EUR', 'AU' => 'AUD',
+		'AW' => 'AWG', 'AX' => 'EUR', 'AZ' => 'AZN', 'BA' => 'BAM', 'BB' => 'BBD', 'BD' => 'BDT',
+		'BE' => 'EUR', 'BF' => 'XOF', 'BG' => 'EUR', 'BH' => 'BHD', 'BI' => 'BIF', 'BJ' => 'XOF',
+		'BL' => 'EUR', 'BM' => 'BMD', 'BN' => 'BND', 'BO' => 'BOB', 'BQ' => 'USD', 'BR' => 'BRL',
+		'BS' => 'BSD', 'BV' => 'NOK', 'BW' => 'BWP', 'BZ' => 'BZD', 'CA' => 'CAD', 'CC' => 'AUD',
+		'CD' => 'CDF', 'CF' => 'XAF', 'CG' => 'XAF', 'CH' => 'CHF', 'CI' => 'XOF', 'CK' => 'NZD',
+		'CL' => 'CLP', 'CM' => 'XAF', 'CN' => 'CNY', 'CO' => 'COP', 'CR' => 'CRC', 'CV' => 'CVE',
+		'CX' => 'AUD', 'CY' => 'EUR', 'CZ' => 'CZK', 'DE' => 'EUR', 'DJ' => 'DJF', 'DK' => 'DKK',
+		'DM' => 'XCD', 'DO' => 'DOP', 'DZ' => 'DZD', 'EC' => 'USD', 'EE' => 'EUR', 'EG' => 'EGP',
+		'EH' => 'MAD', 'ES' => 'EUR', 'ET' => 'ETB', 'EU' => 'EUR', 'FI' => 'EUR', 'FJ' => 'FJD',
+		'FM' => 'USD', 'FO' => 'DKK', 'FR' => 'EUR', 'GA' => 'XAF', 'GB' => 'GBP', 'GD' => 'XCD',
+		'GE' => 'GEL', 'GF' => 'EUR', 'GG' => 'GBP', 'GH' => 'GHS', 'GI' => 'GIP', 'GL' => 'DKK',
+		'GM' => 'GMD', 'GN' => 'GNF', 'GP' => 'EUR', 'GQ' => 'XAF', 'GR' => 'EUR', 'GS' => 'GBP',
+		'GT' => 'GTQ', 'GU' => 'USD', 'GW' => 'XOF', 'GY' => 'GYD', 'HK' => 'HKD', 'HM' => 'AUD',
+		'HN' => 'HNL', 'HR' => 'EUR', 'HT' => 'HTG', 'HU' => 'HUF', 'ID' => 'IDR', 'IE' => 'EUR',
+		'IL' => 'ILS', 'IM' => 'GBP', 'IN' => 'INR', 'IO' => 'USD', 'IS' => 'ISK', 'IT' => 'EUR',
+		'JE' => 'GBP', 'JM' => 'JMD', 'JO' => 'JOD', 'JP' => 'JPY', 'KE' => 'KES', 'KG' => 'KGS',
+		'KH' => 'KHR', 'KI' => 'AUD', 'KM' => 'KMF', 'KN' => 'XCD', 'KR' => 'KRW', 'KW' => 'KWD',
+		'KY' => 'KYD', 'KZ' => 'KZT', 'LA' => 'LAK', 'LB' => 'LBP', 'LC' => 'XCD', 'LI' => 'CHF',
+		'LK' => 'LKR', 'LR' => 'LRD', 'LS' => 'LSL', 'LT' => 'EUR', 'LU' => 'EUR', 'LV' => 'EUR',
+		'MA' => 'MAD', 'MC' => 'EUR', 'MD' => 'MDL', 'ME' => 'EUR', 'MF' => 'EUR', 'MG' => 'MGA',
+		'MH' => 'USD', 'MK' => 'MKD', 'ML' => 'XOF', 'MM' => 'MMK', 'MN' => 'MNT', 'MP' => 'USD',
+		'MQ' => 'EUR', 'MS' => 'XCD', 'MT' => 'EUR', 'MU' => 'MUR', 'MV' => 'MVR', 'MW' => 'MWK',
+		'MX' => 'MXN', 'MY' => 'MYR', 'MZ' => 'MZN', 'NA' => 'NAD', 'NC' => 'XPF', 'NE' => 'XOF',
+		'NF' => 'AUD', 'NG' => 'NGN', 'NI' => 'NIO', 'NL' => 'EUR', 'NO' => 'NOK', 'NP' => 'NPR',
+		'NR' => 'AUD', 'NU' => 'NZD', 'NZ' => 'NZD', 'OM' => 'OMR', 'PA' => 'PAB', 'PE' => 'PEN',
+		'PF' => 'XPF', 'PG' => 'PGK', 'PH' => 'PHP', 'PK' => 'PKR', 'PL' => 'PLN', 'PM' => 'EUR',
+		'PN' => 'NZD', 'PR' => 'USD', 'PS' => 'ILS', 'PT' => 'EUR', 'PW' => 'USD', 'PY' => 'PYG',
+		'QA' => 'QAR', 'RE' => 'EUR', 'RO' => 'RON', 'RS' => 'RSD', 'RU' => 'RUB', 'RW' => 'RWF',
+		'SA' => 'SAR', 'SB' => 'SBD', 'SC' => 'SCR', 'SE' => 'SEK', 'SG' => 'SGD', 'SI' => 'EUR',
+		'SJ' => 'NOK', 'SK' => 'EUR', 'SM' => 'EUR', 'SN' => 'XOF', 'SO' => 'SOS', 'SR' => 'SRD',
+		'ST' => 'STN', 'SV' => 'USD', 'SZ' => 'SZL', 'TC' => 'USD', 'TD' => 'XAF', 'TF' => 'EUR',
+		'TG' => 'XOF', 'TH' => 'THB', 'TJ' => 'TJS', 'TK' => 'NZD', 'TL' => 'USD', 'TM' => 'TMT',
+		'TN' => 'TND', 'TO' => 'TOP', 'TR' => 'TRY', 'TT' => 'TTD', 'TV' => 'AUD', 'TW' => 'TWD',
+		'TZ' => 'TZS', 'UA' => 'UAH', 'UG' => 'UGX', 'UM' => 'USD', 'US' => 'USD', 'UY' => 'UYU',
+		'UZ' => 'UZS', 'VA' => 'EUR', 'VC' => 'XCD', 'VG' => 'USD', 'VI' => 'USD', 'VN' => 'VND',
+		'VU' => 'VUV', 'WF' => 'XPF', 'WS' => 'WST', 'XK' => 'EUR', 'YT' => 'EUR', 'ZA' => 'ZAR',
+		'ZM' => 'ZMW', 'ZW' => 'USD',
+	);
+
+	/**
 	 * Stripe's minimum charge, in the currency's minor unit.
 	 *
 	 * Stripe refuses a charge below this so its fee cannot exceed the
@@ -415,31 +478,42 @@ final readonly class Currencies {
 	}
 
 	/**
-	 * The currencies a country issues, from this dataset.
+	 * The currencies a shopper in a country pays in.
 	 *
-	 * Plain data: the issuing country each currency carries. A supranational
-	 * currency is filed under its union -- the euro under `EU`, the CFA
-	 * francs under one member each -- so this answers "whose is this
-	 * currency", not "what does a shopper in Germany pay in". That second
-	 * question belongs with the countries.
+	 * `DE` and `IE` give the euro, `BG` the euro since 2026, `CI` the West
+	 * African CFA franc. For deciding which of several prices to show
+	 * somebody, not for accounting: nothing here converts anything. A list,
+	 * so an empty one is the "use your default" answer for a country whose
+	 * money is not in the dataset -- a shop with no price in somebody's
+	 * currency is not a broken shop.
+	 *
+	 * Which country issues a currency is {@see country()}.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param string $country_code ISO 3166-1 alpha-2 code, any case.
 	 *
-	 * @return list<string> Uppercase currency codes.
+	 * @return list<string> Uppercase currency codes; empty when unknown.
 	 */
 	public static function for_country( string $country_code ): array {
-		$country = strtoupper( trim( $country_code ) );
-		$found   = array();
+		$code = self::paid_in( $country_code );
 
-		foreach ( self::CURRENCIES as $code => $meta ) {
-			if ( $meta['country'] === $country ) {
-				$found[] = strtoupper( $code );
-			}
-		}
+		return null === $code ? array() : array( $code );
+	}
 
-		return $found;
+	/**
+	 * The currency a shopper in a country pays in.
+	 *
+	 * {@see for_country()} as one code: `paid_in( 'DE' )` is `EUR`.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $country_code ISO 3166-1 alpha-2 code, any case.
+	 *
+	 * @return string|null Uppercase ISO-4217 code, or null for "use your default".
+	 */
+	public static function paid_in( string $country_code ): ?string {
+		return self::COUNTRY_CURRENCY[ strtoupper( trim( $country_code ) ) ] ?? null;
 	}
 
 	/**

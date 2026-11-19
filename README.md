@@ -176,13 +176,22 @@ Currencies::symbol( 'GBP' );               // £
 Currencies::name( 'JPY' );                 // Japanese Yen
 Currencies::is_zero_decimal( 'KRW' );      // true
 Currencies::scale( 'JPY', 'GBP' );         // 100 — multiply converted minor units by it
-Currencies::for_country( 'JP' );           // [ 'JPY' ] — the issuing country, `EU` for the euro
+Currencies::country( 'EUR' );              // 'EU' — the issuing country
+Currencies::for_country( 'DE' );           // [ 'EUR' ] — what a shopper there pays in
+Currencies::paid_in( 'BG' );               // 'EUR' (since 2026); null for "use your default"
 Currencies::sanitize_code( $_GET['c'] );   // three upper-case letters, or ''
 Currencies::options( '{name} ({code})' );  // 'USD' => 'US Dollar (USD)', sorted
 ```
 
-The country each currency carries is plain data. Which currency a shopper in a
-given country pays in is a question for the countries, not this package.
+`country()` answers "whose is this currency": the euro is filed under `EU`.
+`for_country()` and `paid_in()` answer the other question, "what does a shopper
+in Germany pay in", for deciding which of several prices to show; nothing is
+converted. The whole euro area is listed, Bulgaria included since 1 January 2026,
+and so are the places that spend a neighbour's money (Ecuador and Timor-Leste in
+dollars, Liechtenstein in francs, the CFA franc zones). A country whose money is
+not in the dataset gives `null` / `[]`, which means "use your default". The lev,
+the Antillean guilder and the old leone stay in the dataset so old orders still
+format, but no country pays in them.
 
 ## Moving from arraypress/wp-*
 
@@ -209,6 +218,8 @@ keeps its name under `SugarCommerce\Money`.
 | `Currency\Money::input_value( $amount, $code )` | `Money::input_value( $amount, $code )` |
 | `Currency\Money::is_valid_amount()` refusing HUF/TWD fractions | charges allow them, as Stripe does; `Money::is_valid_payout()` for payouts |
 | `Currency\Currencies::options()` | `Currencies::options()`, or `Currencies::options( $template )` |
+| `Currency\Currencies::for_country()` (the issuer; `[]` for `DE`) | `Currencies::for_country()` now answers what a shopper there pays in; the issuer is `Currencies::country( $code )` |
+| `SugarCommerce\Countries\Country::currency( $country )` | `Currencies::paid_in( $country )` |
 
 ## Requirements
 

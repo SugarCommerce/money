@@ -106,6 +106,42 @@ final class DatasetTest extends TestCase {
 	}
 
 	/**
+	 * Every currency still in use is the one its issuing country pays in.
+	 *
+	 * Catches a spending map that drifts from the dataset: a new currency
+	 * added without a country, or a country pointed at a neighbour's money.
+	 * The lev, the Antillean guilder and the old leone are kept for history
+	 * and are no longer spent anywhere.
+	 */
+	public function test_each_issuer_pays_in_its_own_currency(): void {
+		$retired = array( 'bgn', 'ang', 'sll' );
+
+		foreach ( array_keys( Currencies::all() ) as $code ) {
+			$code    = (string) $code;
+			$country = Currencies::country( $code );
+
+			if ( in_array( $code, $retired, true ) ) {
+				$this->assertNotContains( strtoupper( $code ), Currencies::for_country( $country ), sprintf( '%s is retired but still spent in %s.', $code, $country ) );
+				continue;
+			}
+
+			$this->assertSame( array( strtoupper( $code ) ), Currencies::for_country( $country ), sprintf( '%s does not pay in %s.', $country, $code ) );
+		}
+	}
+
+	/**
+	 * The whole euro area pays in euro.
+	 */
+	public function test_the_euro_area_is_complete(): void {
+		$members = array( 'AT', 'BE', 'BG', 'HR', 'CY', 'EE', 'FI', 'FR', 'DE', 'GR', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PT', 'SK', 'SI', 'ES' );
+		$others  = array( 'AD', 'MC', 'SM', 'VA', 'ME', 'XK' );
+
+		foreach ( array_merge( $members, $others ) as $country ) {
+			$this->assertSame( 'EUR', Currencies::paid_in( $country ), sprintf( '%s does not pay in euro.', $country ) );
+		}
+	}
+
+	/**
 	 * The currencies a store is most likely to take are present.
 	 *
 	 * A spot check against the failure the cross-checks cannot see: a table
