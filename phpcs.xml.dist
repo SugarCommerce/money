@@ -11,7 +11,11 @@
     <arg name="colors"/>
     <arg value="sp"/>
 
-    <rule ref="PHPCompatibility"/>
+    <rule ref="PHPCompatibility">
+        <!-- PHPCompatibility 2.x predates typed class constants (PHP 8.3) and
+             reads `const array NAME` in a trait as a constant named "array". -->
+        <exclude name="PHPCompatibility.Keywords.ForbiddenNames.arrayFound"/>
+    </rule>
     <config name="testVersion" value="8.3-"/>
 
     <!--

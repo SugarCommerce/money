@@ -41,7 +41,7 @@ final class Rate {
 	 *
 	 * @var string[]
 	 */
-	private const PERCENTAGE_KINDS = array( 'percent', 'percentage', 'pct', '%' );
+	private const array PERCENTAGE_KINDS = array( 'percent', 'percentage', 'pct', '%' );
 
 	/**
 	 * Whether a kind names a percentage.

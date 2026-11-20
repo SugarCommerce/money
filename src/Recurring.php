@@ -36,7 +36,7 @@ final class Recurring {
 	 *
 	 * @var string[]
 	 */
-	public const INTERVALS = array( 'day', 'week', 'month', 'year' );
+	public const array INTERVALS = array( 'day', 'week', 'month', 'year' );
 
 	/**
 	 * What follows the amount.
@@ -299,8 +299,8 @@ final class Recurring {
 	 *
 	 * @since 1.0.0
 	 */
-	public const SHORT = 'short';
-	public const LONG  = 'long';
+	public const string SHORT = 'short';
+	public const string LONG  = 'long';
 
 	/**
 	 * The intervals, for a settings dropdown.

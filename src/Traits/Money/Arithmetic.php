@@ -82,7 +82,7 @@ trait Arithmetic {
 	 * Decimal places of a percentage that percentage() honours, as a power
 	 * of ten.
 	 */
-	private const PERCENT_SCALE = 1_000_000;
+	private const int PERCENT_SCALE = 1_000_000;
 
 	/**
 	 * Split an amount into shares that still sum to the original.

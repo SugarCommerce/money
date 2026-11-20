@@ -34,7 +34,7 @@ trait Charging {
 	 *
 	 * @var string[]
 	 */
-	private const HUNDRED_MULTIPLE = array( 'isk', 'ugx' );
+	private const array HUNDRED_MULTIPLE = array( 'isk', 'ugx' );
 
 	/**
 	 * Currencies that must be whole major units when paying *out*.
@@ -50,7 +50,7 @@ trait Charging {
 	 *
 	 * @var string[]
 	 */
-	private const HUNDRED_MULTIPLE_PAYOUT = array( 'huf', 'twd' );
+	private const array HUNDRED_MULTIPLE_PAYOUT = array( 'huf', 'twd' );
 
 	/**
 	 * Whether an amount is one the processor will accept.

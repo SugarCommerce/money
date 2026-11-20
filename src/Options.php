@@ -41,7 +41,7 @@ final class Options {
 	 *
 	 * @var array<string, mixed>
 	 */
-	private const FORMAT = array(
+	private const array FORMAT = array(
 		// ISO-4217 code. Empty means the default, from
 		// Money::set_default_currency().
 		'currency'       => '',
@@ -83,7 +83,7 @@ final class Options {
 	 *
 	 * @var array<string, mixed>
 	 */
-	private const RENDER = array(
+	private const array RENDER = array(
 		// What it cost before. Set and higher than the amount, the price
 		// renders as a reduction.
 		'compare_at' => null,
