@@ -193,33 +193,22 @@ not in the dataset gives `null` / `[]`, which means "use your default". The lev,
 the Antillean guilder and the old leone stay in the dataset so old orders still
 format, but no country pays in them.
 
-## Moving from arraypress/wp-*
+## Security
 
-From `arraypress/wp-money` (`ArrayPress\Money`) and the retired
-`sugarcommerce/currency` (`SugarCommerce\Currency`). Everything not listed
-keeps its name under `SugarCommerce\Money`.
-
-| Old | New |
-|---|---|
-| `ArrayPress\Money\*`, `SugarCommerce\Currency\*` | `SugarCommerce\Money\*` |
-| `money_currency()` | `Money::currency()` |
-| filter `money_currency` | `Money::set_default_currency( fn() => apply_filters( '…', … ) )` |
-| `format_money( $amount, $options )` | `Money::format( $amount, $options )` |
-| `render_price( $amount, $options )` | `Render::price( $amount, $options )` |
-| `sanitize_money( $value, $code )` | `Money::sanitize_input( $value, $code )` |
-| `money_input_value( $amount, $code )` | `Money::input_value( $amount, $code )` |
-| `Money::parse()` truncating `49.999` to 4999 | throws `InvalidArgumentException`; catch it where the form is saved |
-| `Rate::format( $v, $kind )` defaulting to USD | defaults to `Money::currency()` |
-| `Currency\Money::format( $amount, $code )` | `Money::format( $amount, $code )` |
-| `Currency\Money::format_with_code( $amount, $code )` | `Money::format( $amount, [ 'currency' => $code, 'symbol' => false, 'code' => true ] )` |
-| `Currency\Money::format_compact( $amount, $code )` | `Money::format( $amount, [ 'currency' => $code, 'compact' => true ] )` |
-| `Currency\Money::format_localized( $amount, $code, $locale )` | `Money::format( $amount, [ 'currency' => $code, 'locale' => $locale ?: Currencies::locale( $code ) ] )` |
-| `Currency\Money::format_localized_compact( $amount, $code, $locale )` | `Money::format( $amount, [ 'currency' => $code, 'locale' => $locale, 'compact' => true ] )` |
-| `Currency\Money::input_value( $amount, $code )` | `Money::input_value( $amount, $code )` |
-| `Currency\Money::is_valid_amount()` refusing HUF/TWD fractions | charges allow them, as Stripe does; `Money::is_valid_payout()` for payouts |
-| `Currency\Currencies::options()` | `Currencies::options()`, or `Currencies::options( $template )` |
-| `Currency\Currencies::for_country()` (the issuer; `[]` for `DE`) | `Currencies::for_country()` now answers what a shopper there pays in; the issuer is `Currencies::country( $code )` |
-| `SugarCommerce\Countries\Country::currency( $country )` | `Currencies::paid_in( $country )` |
+* A currency code from a query string never reaches the page: an unknown one is
+  dropped unless it is three plain letters, and ICU never sees it.
+* A typed amount is never rounded or clamped into a different price: finer than
+  the currency, or past the integer range, it throws.
+* `−5.00` with a Unicode minus stays negative, so a credit never reads as a charge.
+* Digits from other scripts (`١٠٠`, `１００`) read as the number they are, not
+  as nought; text that is not UTF-8 is refused rather than read as free.
+* The dots in `د.إ`, `ل.ل` and `ر.ع.` are not read as separators, so the
+  library's own output parses back to the same amount.
+* An unknown billing interval is never read as a `sprintf()` format.
+* No arithmetic goes through a float where it could lose a penny: percentages,
+  savings and large amounts are exact, and out-of-range values are clamped or
+  refused rather than wrapped.
+* `Render::price()` escapes once, at the end.
 
 ## Requirements
 
