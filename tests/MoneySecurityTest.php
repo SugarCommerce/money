@@ -204,6 +204,47 @@ final class MoneySecurityTest extends TestCase {
 		Money::parse( "\xA35.00", 'GBP' );
 	}
 
+	/**
+	 * Three symbols are written with dots -- `د.إ`, `ل.ل`, `ر.ع.` -- and
+	 * the dots were read as separators: the library's own `ر.ع. 123.450`
+	 * parsed as 123,450 rials, a thousand times the price, and `د.إ
+	 * 1,234.50` was refused. A dot or comma with no digit on either side
+	 * is part of a symbol, not of the number.
+	 *
+	 * @param string $code A currency whose symbol has a dot.
+	 */
+	#[DataProvider( 'dotted_symbols' )]
+	public function test_a_symbol_with_dots_reads_back( string $code ): void {
+		foreach ( array( 123450, 50, 100000000 ) as $amount ) {
+			$this->assertSame( $amount, Money::parse( Money::format( $amount, $code ), $code ) );
+		}
+	}
+
+	/**
+	 * @return array<string, array{0: string}>
+	 */
+	public static function dotted_symbols(): array {
+		return array(
+			'AED' => array( 'AED' ),
+			'LBP' => array( 'LBP' ),
+			'OMR' => array( 'OMR' ),
+		);
+	}
+
+	public function test_a_bare_decimal_point_still_counts(): void {
+		$this->assertSame( 50, Money::parse( '.50', 'USD' ) );
+		$this->assertSame( 50, Money::parse( '$.50', 'USD' ) );
+		$this->assertSame( 500, Money::parse( '5.', 'USD' ) );
+		$this->assertSame( 500, Money::parse( '5,', 'EUR' ) );
+	}
+
+	#[RequiresPhpExtension( 'intl' )]
+	public function test_an_arabic_price_reads_back(): void {
+		$written = Money::format( 50050, array( 'currency' => 'AED', 'locale' => 'ar_EG' ) );
+
+		$this->assertSame( 50050, Money::parse( $written, 'AED' ) );
+	}
+
 	/* ─── Billing periods ───────────────────────────────────────────── */
 
 	/**

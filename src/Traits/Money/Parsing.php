@@ -93,6 +93,11 @@ trait Parsing {
 		// with the symbols instead, −5.00 read as a charge of 5.00.
 		$input = str_replace( self::MINUS_SIGNS, '-', self::in_ascii_digits( $input ) );
 
+		// A dot or comma with no digit either side belongs to a symbol --
+		// `د.إ`, `ر.ع.` -- not to the number. Read as separators, they
+		// turned `ر.ع. 123.450` into a thousand times the price.
+		$input = (string) preg_replace( '/(?<![0-9])[.,](?![0-9])/', '', $input );
+
 		// Strip everything but digits, separators and a leading sign.
 		$clean    = (string) preg_replace( '/[^\d.,\-]/u', '', trim( $input ) );
 		$negative = str_starts_with( $clean, '-' );
