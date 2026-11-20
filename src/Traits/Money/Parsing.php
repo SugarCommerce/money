@@ -13,6 +13,7 @@ declare( strict_types=1 );
 namespace SugarCommerce\Money\Traits\Money;
 
 use SugarCommerce\Money\Currencies;
+use SugarCommerce\Money\Models\Unit;
 
 /**
  * Reading a typed amount back: parse(), sanitize_input().
@@ -54,6 +55,40 @@ trait Parsing {
 		"\u{FF0E}" => '.', // Full-width full stop.
 		"\u{FF0C}" => ',', // Full-width comma.
 	);
+
+	/**
+	 * An amount a caller gave in either unit, as minor units.
+	 *
+	 * For a component or a setting that takes amounts in a declared unit
+	 * ({@see Unit}): major units are rounded to the currency's own exponent
+	 * (none for yen, three for dinar) and parsed exactly; minor units are
+	 * taken as they are, rounded to a whole number.
+	 *
+	 *     Money::minor( 148, 'USD' );                  // 14800
+	 *     Money::minor( 14800, 'USD', Unit::Minor );   // 14800
+	 *     Money::minor( 'free', 'USD' );               // 0
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param mixed  $amount The amount; 0 when it is not numeric.
+	 * @param string $code   ISO-4217 code.
+	 * @param Unit   $unit   The unit it is in.
+	 *
+	 * @return int Amount in the smallest currency unit.
+	 *
+	 * @throws \InvalidArgumentException When it is too large to hold in an integer.
+	 */
+	public static function minor( mixed $amount, string $code, Unit $unit = Unit::Major ): int {
+		if ( ! is_numeric( $amount ) ) {
+			return 0;
+		}
+
+		if ( Unit::Minor === $unit ) {
+			return (int) round( (float) $amount );
+		}
+
+		return self::parse( number_format( (float) $amount, Currencies::decimals( $code ), '.', '' ), $code );
+	}
 
 	/**
 	 * Parse human input back to the smallest currency unit.

@@ -110,6 +110,22 @@ integer, and for one with more decimal places than the currency has: storing
 $1.23 for a typed `1.234`, or ¥101 for `100.5`, is a price nobody typed. Catch
 it where a form is saved and show it as a validation message.
 
+A component or a setting that takes amounts from code says which unit they
+are in, `Models\Unit`: major (148.00 is $148, the default) or minor (14800 is
+$148, as a store keeps it). Nothing is guessed from the value -- 148 could be
+either, and round amounts are the ones people type:
+
+```php
+use SugarCommerce\Money\Models\Unit;
+
+Money::minor( 148, 'USD' );                        // 14800
+Money::minor( 14800, 'USD', Unit::Minor );         // 14800
+Money::minor( 1.5, 'KWD' );                        // 1500, by the currency's own exponent
+Money::minor( $amount, $code, Unit::of( $config['money'] ?? '' ) );   // minor only when it says 'minor'
+```
+
+sugarcommerce/flyouts' money components take their `money` option this way.
+
 ## Can it be charged?
 
 ```php
