@@ -44,6 +44,18 @@ trait Parsing {
 	);
 
 	/**
+	 * Separators other scripts write, as the ASCII ones they stand for.
+	 *
+	 * @var array<string, string>
+	 */
+	private const array SEPARATORS = array(
+		"\u{066B}" => '.', // Arabic decimal separator.
+		"\u{066C}" => ',', // Arabic thousands separator.
+		"\u{FF0E}" => '.', // Full-width full stop.
+		"\u{FF0C}" => ',', // Full-width comma.
+	);
+
+	/**
 	 * Parse human input back to the smallest currency unit.
 	 *
 	 * Accepts what people actually type: symbols, spaces, thousands
@@ -79,7 +91,7 @@ trait Parsing {
 
 		// Every minus sign a keyboard or ICU writes is a minus. Stripped
 		// with the symbols instead, −5.00 read as a charge of 5.00.
-		$input = str_replace( self::MINUS_SIGNS, '-', $input );
+		$input = str_replace( self::MINUS_SIGNS, '-', self::in_ascii_digits( $input ) );
 
 		// Strip everything but digits, separators and a leading sign.
 		$clean    = (string) preg_replace( '/[^\d.,\-]/u', '', trim( $input ) );
@@ -111,6 +123,46 @@ trait Parsing {
 		$amount   = self::digits_to_int( $major . $fraction );
 
 		return $negative ? -$amount : $amount;
+	}
+
+	/**
+	 * Input with every digit written as an ASCII one.
+	 *
+	 * `١٠٠` on an Arabic keyboard and `１００` from a Japanese input method
+	 * are a hundred, as `100` is. The pattern that strips the symbols keeps
+	 * such digits and the one that reads the number does not, so left
+	 * alone they vanished: `١٠٠` read as nought and `1٠0` as ten. Their
+	 * values come from ICU; without ext-intl they are refused rather than
+	 * guessed at.
+	 *
+	 * @param string $input Raw input.
+	 *
+	 * @return string
+	 *
+	 * @throws \InvalidArgumentException When the input is not UTF-8, or has
+	 *                                   digits that cannot be read without
+	 *                                   ext-intl.
+	 */
+	private static function in_ascii_digits( string $input ): string {
+		// Text that is not UTF-8 fails every /u pattern, which used to read
+		// as nothing numeric -- nought, a free price.
+		if ( ! mb_check_encoding( $input, 'UTF-8' ) ) {
+			throw new \InvalidArgumentException( 'That amount is not readable text.' );
+		}
+
+		$input = strtr( $input, self::SEPARATORS );
+
+		return (string) preg_replace_callback(
+			'/(?![0-9])\p{Nd}/u',
+			static function ( array $digit ): string {
+				if ( ! class_exists( \IntlChar::class ) ) {
+					throw new \InvalidArgumentException( 'That amount is written in digits this system cannot read.' );
+				}
+
+				return (string) \IntlChar::charDigitValue( $digit[0] );
+			},
+			$input
+		);
 	}
 
 	/**

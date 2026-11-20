@@ -180,6 +180,30 @@ final class MoneySecurityTest extends TestCase {
 		$this->assertSame( -1250, Money::parse( $written, 'SEK' ) );
 	}
 
+	/**
+	 * Digits from another script were kept by the first pass and dropped
+	 * by the second, so `١٠٠` -- a hundred, typed on an Arabic keyboard --
+	 * read as nought, and `1٠0` as ten. A price nobody typed, and nought
+	 * reads as free. They are read as the digits they are.
+	 */
+	#[RequiresPhpExtension( 'intl' )]
+	public function test_digits_from_other_scripts_read_as_digits(): void {
+		$this->assertSame( 10000, Money::parse( '١٠٠', 'AED' ) );
+		$this->assertSame( 10000, Money::parse( '1٠0', 'USD' ) );
+		$this->assertSame( 123456, Money::parse( '१,२३४.५६', 'INR' ) );
+		$this->assertSame( 1250, Money::parse( '１２．５０', 'USD' ), 'Full-width, as an IME types it.' );
+	}
+
+	/**
+	 * Text that is not UTF-8 failed the pattern and read as nought -- a
+	 * free price -- rather than as something that could not be read.
+	 */
+	public function test_text_that_is_not_utf8_is_refused(): void {
+		$this->expectException( InvalidArgumentException::class );
+
+		Money::parse( "\xA35.00", 'GBP' );
+	}
+
 	/* ─── Billing periods ───────────────────────────────────────────── */
 
 	/**
