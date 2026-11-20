@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use SugarCommerce\Money\Currencies;
 use SugarCommerce\Money\Money;
+use SugarCommerce\Money\Recurring;
 
 /**
  * A currency code routinely arrives from a query string — `?currency=`
@@ -140,5 +141,20 @@ final class MoneySecurityTest extends TestCase {
 	public function test_an_empty_currency_is_the_stores(): void {
 		$this->assertSame( Money::format( 100 ), Money::format( 100, array( 'currency' => '' ) ) );
 		$this->assertSame( '$1.00', Money::format( 100, array( 'currency' => '' ) ) );
+	}
+
+	/* ─── Billing periods ───────────────────────────────────────────── */
+
+	/**
+	 * An interval this library has not heard of is written out as given,
+	 * and it used to be written into the sprintf() format: a stored
+	 * interval of `%s` threw ArgumentCountError -- a fatal error on every
+	 * page that listed the subscription -- and `%1$s` printed the count.
+	 */
+	public function test_an_unknown_interval_is_never_read_as_a_format(): void {
+		$this->assertSame( 'Every 2 %ss', Recurring::label( '%s', 2 ) );
+		$this->assertSame( '2 x%1$ss', Recurring::period( 'x%1$s', 2 ) );
+		$this->assertSame( '$9.99 / 3 %d%ss', Recurring::with_amount( '$9.99', '%d%s', 3, Recurring::LONG ) );
+		$this->assertSame( '3 terms', Recurring::period( 'term', 3 ), 'An ordinary unknown interval is unchanged.' );
 	}
 }

@@ -168,7 +168,7 @@ final class Recurring {
 			'month' => _n( 'Every %d month', 'Every %d months', $count, 'sugarcommerce' ),
 			/* translators: %d: how many years between charges. */
 			'year'  => _n( 'Every %d year', 'Every %d years', $count, 'sugarcommerce' ),
-			default => 'Every %d ' . $interval . 's',
+			default => 'Every %d ' . self::literal( $interval ) . 's',
 		};
 
 		return sprintf( $text, $count );
@@ -215,10 +215,26 @@ final class Recurring {
 			'month' => _n( '%d month', '%d months', $count, 'sugarcommerce' ),
 			/* translators: %d: how many years. */
 			'year'  => _n( '%d year', '%d years', $count, 'sugarcommerce' ),
-			default => '%d ' . $interval . 's',
+			default => '%d ' . self::literal( $interval ) . 's',
 		};
 
 		return sprintf( $text, $count );
+	}
+
+	/**
+	 * An interval made safe to sit inside a sprintf() format.
+	 *
+	 * An interval this library has not heard of is written out as given,
+	 * and it can come from a gateway, an import or a stored row. Left as it
+	 * is, `%s` in one throws ArgumentCountError -- a fatal error on the page
+	 * -- and `%1$s` prints something else in its place.
+	 *
+	 * @param string $interval The interval.
+	 *
+	 * @return string
+	 */
+	private static function literal( string $interval ): string {
+		return str_replace( '%', '%%', $interval );
 	}
 
 	/**
