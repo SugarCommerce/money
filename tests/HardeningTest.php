@@ -259,4 +259,22 @@ final class HardeningTest extends TestCase {
 		$this->assertSame( -500, Money::round_to_valid( -549, 'ISK' ) );
 		$this->assertSame( 1240, Money::round_to_valid( 1235, 'BHD' ), 'A tie goes away from zero.' );
 	}
+
+	/**
+	 * The saving went through a float: 29% off a 100 read as 28%, because
+	 * 0.29 * 100 is 28.999…. A price below nought read as more than 100%
+	 * off, and on PHP 8.5 one far enough below warned and read as the
+	 * smallest integer.
+	 */
+	public function test_a_saving_is_exact_and_never_past_a_hundred(): void {
+		$this->assertSame( 29, Money::saving_percentage( 71, 100 ) );
+		$this->assertSame( 57, Money::saving_percentage( 43, 100 ) );
+		$this->assertSame( 33, Money::saving_percentage( 3350, 5000 ), 'Still rounded down.' );
+		$this->assertSame( 100, Money::saving_percentage( 0, 100 ) );
+		$this->assertSame( 100, Money::saving_percentage( -500, 100 ) );
+		$this->assertSame( 100, Money::saving_percentage( -PHP_INT_MAX, 100 ) );
+		$this->assertSame( 99, Money::saving_percentage( 1, PHP_INT_MAX ) );
+		$this->assertSame( 49, Money::saving_percentage( intdiv( PHP_INT_MAX, 2 ) + 1, PHP_INT_MAX ), 'A hair under half, which a float calls half.' );
+		$this->assertSame( 50, Money::saving_percentage( intdiv( PHP_INT_MAX, 4 ), 2 * intdiv( PHP_INT_MAX, 4 ) ), 'Exactly half.' );
+	}
 }

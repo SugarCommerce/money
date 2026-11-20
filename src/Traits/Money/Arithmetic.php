@@ -125,19 +125,48 @@ trait Arithmetic {
 	 * For the badge on a product card. Rounded down, so the saving is never
 	 * overstated: 33.9% off reads as 33%, which is a claim the price supports.
 	 *
+	 * In integers: through a float, 29% off a 100 read as 28%, because
+	 * 0.29 * 100 is 28.999…. Nothing is ever more than 100% off.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @param int $amount     What is being charged.
 	 * @param int $compare_at What it cost before.
 	 *
-	 * @return int Nought when it is not a reduction.
+	 * @return int Nought when it is not a reduction; 100 when it is free.
 	 */
 	public static function saving_percentage( int $amount, int $compare_at ): int {
 		if ( $compare_at <= 0 || $amount >= $compare_at ) {
 			return 0;
 		}
 
-		return (int) floor( ( ( $compare_at - $amount ) / $compare_at ) * 100 );
+		if ( $amount <= 0 ) {
+			return 100;
+		}
+
+		$saved = $compare_at - $amount;
+
+		if ( $saved <= intdiv( PHP_INT_MAX, 100 ) ) {
+			return intdiv( $saved * 100, $compare_at );
+		}
+
+		// Past that, saved × 100 would overflow. It is added up a hundred
+		// times instead, taking out a whole compare_at whenever one fits;
+		// saved is less than compare_at, so the running total never
+		// reaches it and nothing here overflows.
+		$percent = 0;
+		$left    = 0;
+
+		for ( $i = 0; $i < 100; $i++ ) {
+			if ( $left >= $compare_at - $saved ) {
+				$left -= $compare_at - $saved;
+				++$percent;
+			} else {
+				$left += $saved;
+			}
+		}
+
+		return $percent;
 	}
 
 	/**
