@@ -277,4 +277,22 @@ final class HardeningTest extends TestCase {
 		$this->assertSame( 49, Money::saving_percentage( intdiv( PHP_INT_MAX, 2 ) + 1, PHP_INT_MAX ), 'A hair under half, which a float calls half.' );
 		$this->assertSame( 50, Money::saving_percentage( intdiv( PHP_INT_MAX, 4 ), 2 * intdiv( PHP_INT_MAX, 4 ) ), 'Exactly half.' );
 	}
+
+	/**
+	 * A flat amount past the integer range -- a float from JSON, say -- was
+	 * cast as it was: on PHP 8.5 that warns, and the result wraps, so 1e30
+	 * sanitized to some other large number and a 1e19 discount took nothing
+	 * off. Now it is clamped like everything else here.
+	 */
+	public function test_a_flat_rate_past_the_integer_range_is_clamped(): void {
+		$this->assertSame( PHP_INT_MAX, Rate::sanitize( 1e30, 'flat' ) );
+		$this->assertSame( PHP_INT_MAX, Rate::sanitize( '1e30', 'flat' ) );
+		$this->assertSame( 0, Rate::sanitize( -1e30, 'flat' ) );
+		$this->assertSame( 12, Rate::sanitize( 12.7, 'flat' ), 'Still cut, not rounded.' );
+		$this->assertSame( 9007199254740993, Rate::sanitize( '9007199254740993', 'flat' ), 'Digits are not read through a float.' );
+		$this->assertSame( PHP_INT_MAX, Rate::sanitize( str_repeat( '9', 30 ), 'flat' ) );
+		$this->assertSame( 5000, Rate::applied_to( 5000, 1e19, 'flat' ) );
+		$this->assertSame( 0, Rate::applied_to( 5000, -1e19, 'flat' ) );
+		$this->assertSame( 0, Rate::applied_to( 5000, INF, 'flat' ) );
+	}
 }

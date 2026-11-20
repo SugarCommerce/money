@@ -136,7 +136,7 @@ final class Rate {
 		// applied anywhere else.
 		$deduction = self::is_percentage( $kind )
 			? Money::percentage( $amount, max( 0.0, min( 100.0, (float) $value ) ) )
-			: (int) $value;
+			: self::whole( $value );
 
 		return max( 0, min( $amount, $deduction ) );
 	}
@@ -163,7 +163,38 @@ final class Rate {
 			return max( 0.0, min( 100.0, round( (float) $value, 4 ) ) );
 		}
 
-		return max( 0, (int) $value );
+		return self::whole( $value );
+	}
+
+	/**
+	 * A flat amount as a whole number of minor units, nought or more.
+	 *
+	 * Cut, not rounded, as it always was. A float past the integer range
+	 * -- 1e30 from JSON -- is clamped first: cast as it is, PHP 8.5 warns
+	 * and the result wraps round to some other number.
+	 *
+	 * @param int|float|string $value A number, or a numeric string.
+	 *
+	 * @return int
+	 */
+	private static function whole( int|float|string $value ): int {
+		if ( is_int( $value ) ) {
+			return max( 0, $value );
+		}
+
+		// Digits only are read as they are: through a float, a long run
+		// loses its last digits. Too long a run reads as the largest.
+		if ( is_string( $value ) && ctype_digit( $value ) ) {
+			return (int) $value;
+		}
+
+		$number = (float) $value;
+
+		return match ( true ) {
+			! ( $number > 0 )              => 0,
+			$number >= (float) PHP_INT_MAX => PHP_INT_MAX,
+			default                        => (int) $number,
+		};
 	}
 
 	/**
