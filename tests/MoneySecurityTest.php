@@ -14,6 +14,7 @@ namespace SugarCommerce\Money\Tests;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use SugarCommerce\Money\Currencies;
 use SugarCommerce\Money\Money;
@@ -141,6 +142,42 @@ final class MoneySecurityTest extends TestCase {
 	public function test_an_empty_currency_is_the_stores(): void {
 		$this->assertSame( Money::format( 100 ), Money::format( 100, array( 'currency' => '' ) ) );
 		$this->assertSame( '$1.00', Money::format( 100, array( 'currency' => '' ) ) );
+	}
+
+	/**
+	 * A minus sign that is not the ASCII hyphen was stripped with the
+	 * symbols, and the amount read as positive: a credit of −£5.00 became
+	 * a £5.00 charge. ICU writes U+2212 for a negative in Swedish, Finnish
+	 * and others, so the library's own `locale` output read back with its
+	 * sign flipped.
+	 *
+	 * @param string $input A negative amount.
+	 */
+	#[DataProvider( 'unicode_minus_signs' )]
+	public function test_a_unicode_minus_sign_keeps_the_amount_negative( string $input ): void {
+		$this->assertSame( -500, Money::parse( $input, 'USD' ) );
+	}
+
+	/**
+	 * @return array<string, array{0: string}>
+	 */
+	public static function unicode_minus_signs(): array {
+		return array(
+			'minus sign'      => array( "\u{2212}5.00" ),
+			'minus, symbol'   => array( "\u{2212}\$5.00" ),
+			'en dash'         => array( "\u{2013}5.00" ),
+			'figure dash'     => array( "\u{2012}5.00" ),
+			'small hyphen'    => array( "\u{FE63}5.00" ),
+			'fullwidth minus' => array( "\u{FF0D}5.00" ),
+			'ascii'           => array( '-5.00' ),
+		);
+	}
+
+	#[RequiresPhpExtension( 'intl' )]
+	public function test_a_localised_negative_reads_back_negative(): void {
+		$written = Money::format( -1250, array( 'currency' => 'SEK', 'locale' => 'sv' ) );
+
+		$this->assertSame( -1250, Money::parse( $written, 'SEK' ) );
 	}
 
 	/* ─── Billing periods ───────────────────────────────────────────── */

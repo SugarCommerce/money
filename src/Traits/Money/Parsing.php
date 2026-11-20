@@ -26,6 +26,24 @@ use SugarCommerce\Money\Currencies;
 trait Parsing {
 
 	/**
+	 * Characters that write a minus sign other than the ASCII hyphen.
+	 *
+	 * U+2212 is what ICU puts in front of a negative in Swedish, Finnish,
+	 * Norwegian and others, so Money::format() with a `locale` writes it;
+	 * the dashes are what a phone or a word processor turns a typed hyphen
+	 * into.
+	 *
+	 * @var string[]
+	 */
+	private const array MINUS_SIGNS = array(
+		"\u{2212}", // Minus sign.
+		"\u{2012}", // Figure dash.
+		"\u{2013}", // En dash.
+		"\u{FE63}", // Small hyphen-minus.
+		"\u{FF0D}", // Full-width hyphen-minus.
+	);
+
+	/**
 	 * Parse human input back to the smallest currency unit.
 	 *
 	 * Accepts what people actually type: symbols, spaces, thousands
@@ -58,6 +76,10 @@ trait Parsing {
 	 */
 	public static function parse( string $input, string $code ): int {
 		$decimals = Currencies::decimals( $code );
+
+		// Every minus sign a keyboard or ICU writes is a minus. Stripped
+		// with the symbols instead, −5.00 read as a charge of 5.00.
+		$input = str_replace( self::MINUS_SIGNS, '-', $input );
 
 		// Strip everything but digits, separators and a leading sign.
 		$clean    = (string) preg_replace( '/[^\d.,\-]/u', '', trim( $input ) );
